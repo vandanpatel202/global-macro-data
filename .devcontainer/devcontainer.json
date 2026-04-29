@@ -1,0 +1,14 @@
+{
+  "name": "macro-dashboard",
+  "forwardPorts": [3000, 5173],
+  "portsAttributes": {
+    "3000": {
+      "label": "Macro API + Dashboard (prod)",
+      "onAutoForward": "openBrowser"
+    },
+    "5173": {
+      "label": "Vite Dev Server (HMR)",
+      "onAutoForward": "silent"
+    }
+  }
+}

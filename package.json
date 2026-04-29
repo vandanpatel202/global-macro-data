@@ -1,0 +1,38 @@
+{
+  "name": "macro-dashboard",
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "node --env-file=.env server.js",
+    "dev:web": "vite",
+    "build": "tsc -b && vite build",
+    "start": "NODE_ENV=production node --env-file=.env server.js",
+    "typecheck": "tsc -b --noEmit",
+    "db:init": "node --env-file=.env scripts/db-init.js",
+    "ibkr:backfill": ".venv/bin/python scripts/ibkr_backfill.py",
+    "ibkr:refresh": ".venv/bin/python scripts/ibkr_backfill.py --all --duration '5 D' --throttle 2",
+    "fred:backfill": ".venv/bin/python scripts/fred_backfill.py",
+    "task:news": "node --env-file=.env scripts/cron/news.js",
+    "task:sentiment": "node --env-file=.env scripts/cron/sentiment.js",
+    "task:calendar": "node --env-file=.env scripts/cron/calendar.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "pg": "^8.20.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "recharts": "^2.12.7",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "concurrently": "^9.0.1",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8"
+  }
+}

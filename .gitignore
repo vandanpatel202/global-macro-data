@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.*.local
+*.log
+.DS_Store
+tsconfig.tsbuildinfo
+.mcp.json
+.claude/settings.local.json
+.venv/
+__pycache__/
+*.pyc
