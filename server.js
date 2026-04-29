@@ -133,10 +133,15 @@ app.get('/api/history/:symbol', async (req, res) => {
   }
 });
 
-app.get('/api/news', async (_req, res) => {
+app.get('/api/news', async (req, res) => {
+  const q = req.query.q ? String(req.query.q).trim() : null;
+  const sources = req.query.source
+    ? String(req.query.source).split(',').map(s => s.trim()).filter(Boolean)
+    : null;
+  const limit = Math.min(parseInt(req.query.limit || '120', 10) || 120, 500);
   try {
-    const items = await getNews(pool, 120);
-    res.json({ items, updatedAt: Date.now() });
+    const items = await getNews(pool, { q: q || null, sources, limit });
+    res.json({ items, q: q || null, sources: sources || null, updatedAt: Date.now() });
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }

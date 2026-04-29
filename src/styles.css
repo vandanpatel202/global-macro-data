@@ -106,8 +106,20 @@ nav.primary a.active { color: var(--fg); background: var(--bg-3); border-color: 
   overflow-y: auto;
   position: sticky; top: 72px;
 }
-.news-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.news-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
 .news-head h2 { margin: 0; font-size: 15px; }
+.news-search { position: relative; display: flex; align-items: center; }
+.news-search input {
+  flex: 1; background: var(--bg-3); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 6px 28px 6px 10px; font-size: 13px;
+}
+.news-search input:focus { outline: 1px solid var(--accent, #4d7cff); border-color: var(--accent, #4d7cff); }
+.news-clear {
+  position: absolute; right: 6px; background: transparent; border: 0;
+  color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1;
+}
+.news-clear:hover { color: var(--fg); }
 .filters { display: flex; flex-wrap: wrap; gap: 4px; }
 .filter-chip {
   font-size: 10px; padding: 3px 8px; border-radius: 12px;

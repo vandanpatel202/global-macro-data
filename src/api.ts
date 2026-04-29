@@ -52,9 +52,14 @@ export function getCachedOverview(): { data: OverviewPayload; fresh: boolean } |
   return { data: overviewCache.data, fresh: Date.now() - overviewCache.ts < STALE_MS };
 }
 
-export async function fetchNews(): Promise<NewsPayload> {
-  const data = await getJSON<NewsPayload>('/api/news');
-  newsCache = { data, ts: Date.now() };
+export async function fetchNews(opts: { q?: string; source?: string } = {}): Promise<NewsPayload> {
+  const qs = new URLSearchParams();
+  if (opts.q) qs.set('q', opts.q);
+  if (opts.source) qs.set('source', opts.source);
+  const url = qs.toString() ? `/api/news?${qs.toString()}` : '/api/news';
+  const data = await getJSON<NewsPayload>(url);
+  // Only cache the unfiltered list — search/filter results shouldn't be the cached default.
+  if (!opts.q && !opts.source) newsCache = { data, ts: Date.now() };
   return data;
 }
 
