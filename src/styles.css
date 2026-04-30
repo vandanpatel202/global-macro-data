@@ -266,6 +266,51 @@ nav.primary a.active { color: var(--fg); background: var(--bg-3); border-color: 
 .cal-num { color: var(--muted); font-size: 12px; }
 .cal-lbl { font-weight: 600; color: var(--muted); margin-right: 4px; }
 
+.health-list { display: flex; flex-direction: column; gap: 4px; }
+.health-row {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px;
+  padding: 0; border-left-width: 3px;
+}
+.health-row.st-ok   { border-left-color: var(--up,    #2fd47a); }
+.health-row.st-warn { border-left-color: #f5cc80; }
+.health-row.st-down { border-left-color: var(--down,  #ff5a6a); }
+.health-row > summary {
+  display: grid; grid-template-columns: 100px 200px 130px 1fr;
+  gap: 12px; align-items: center; padding: 10px 12px; cursor: pointer;
+  list-style: none; font-size: 13px;
+}
+.health-row > summary::-webkit-details-marker { display: none; }
+.health-pill {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; text-align: center; font-weight: 600;
+}
+.health-pill.st-ok   { background: rgba(47,212,122,0.15); color: var(--up, #2fd47a); }
+.health-pill.st-warn { background: rgba(245,204,128,0.15); color: #f5cc80; }
+.health-pill.st-down { background: rgba(255,90,106,0.15); color: var(--down, #ff5a6a); }
+.health-name { font-weight: 600; }
+.health-schedule code { background: var(--bg-3); padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+.health-meta { color: var(--muted); font-size: 12px; }
+.health-meta strong { color: var(--fg); font-weight: 600; }
+.health-log {
+  margin: 0; padding: 10px 12px; border-top: 1px solid var(--border);
+  background: var(--bg-3); font-size: 11px; line-height: 1.5;
+  overflow-x: auto; max-height: 300px;
+}
+
+.yc-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.yc-head h2 { margin: 0; }
+.yc-controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.yc-date-wrap { position: relative; display: inline-flex; align-items: center; }
+.yc-date-wrap input[type="date"] {
+  background: var(--bg-3); color: var(--fg); border: 1px solid var(--border);
+  padding: 4px 28px 4px 8px; border-radius: 4px; font-size: 12px;
+  font-family: inherit;
+}
+.yc-date-wrap input[type="date"]:focus {
+  outline: 1px solid var(--accent, #4d7cff); border-color: var(--accent, #4d7cff);
+}
+.yc-date-wrap .news-clear { position: absolute; right: 4px; }
+
 .empty-state { color: var(--muted); font-size: 13px; padding: 30px 0; text-align: center; }
 
 .banner {

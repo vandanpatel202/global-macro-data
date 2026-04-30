@@ -35,6 +35,7 @@ fi
 
 block="$START_MARK
 # Macro-dashboard scheduled tasks. Edit scripts/setup_cron.sh and re-run.
+*    * * * * $ROOT/scripts/keep_gateway_alive.sh >> $LOG_DIR/gateway-keepalive.log 2>&1
 */5  * * * * cd $ROOT && $NPM run -s task:news      >> $LOG_DIR/news.log      2>&1
 */10 * * * * cd $ROOT && $NPM run -s task:sentiment >> $LOG_DIR/sentiment.log 2>&1
 0    * * * * cd $ROOT && $NPM run -s task:calendar  >> $LOG_DIR/calendar.log  2>&1

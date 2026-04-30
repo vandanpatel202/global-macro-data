@@ -11,6 +11,7 @@ import {
   getTrendingTickers, getPostsForTicker,
   countSentimentPosts, countSentimentMentions,
   getCalendarEvents, countCalendarEvents,
+  getCronStatus,
 } from './lib/store.js';
 import { startWorker, getMetrics } from './lib/worker.js';
 
@@ -148,6 +149,72 @@ app.get('/api/news', async (req, res) => {
 });
 
 // ---------- Macro / FRED ----------
+// ---------- US Treasury yield curve at one or more dates ----------
+// Each maturity tries the IBKR-backed rates.<table> first (4 of these have
+// IBKR data: 3M, 5Y, 10Y, 30Y), then falls back to FRED's macro.dgs* table.
+const YC_MATURITIES = [
+  { sym: 'US3M',  years: 0.25, label: '3M',  rates: 'us3m',  fred: 'dgs3mo' },
+  { sym: 'US6M',  years: 0.5,  label: '6M',  rates: 'us6m',  fred: 'dgs6mo' },
+  { sym: 'US1Y',  years: 1,    label: '1Y',  rates: 'us1y',  fred: 'dgs1' },
+  { sym: 'US2Y',  years: 2,    label: '2Y',  rates: 'us2y',  fred: 'dgs2' },
+  { sym: 'US3Y',  years: 3,    label: '3Y',  rates: 'us3y',  fred: 'dgs3' },
+  { sym: 'US5Y',  years: 5,    label: '5Y',  rates: 'us5y',  fred: 'dgs5' },
+  { sym: 'US7Y',  years: 7,    label: '7Y',  rates: 'us7y',  fred: 'dgs7' },
+  { sym: 'US10Y', years: 10,   label: '10Y', rates: 'us10y', fred: 'dgs10' },
+  { sym: 'US20Y', years: 20,   label: '20Y', rates: 'us20y', fred: 'dgs20' },
+  { sym: 'US30Y', years: 30,   label: '30Y', rates: 'us30y', fred: 'dgs30' },
+];
+
+async function lookupYieldOnOrBefore(table, schema, valueCol, date) {
+  try {
+    const r = await pool.query(
+      `SELECT date, ${valueCol} AS y FROM ${schema}.${table}
+       WHERE date <= $1 AND ${valueCol} IS NOT NULL
+       ORDER BY date DESC LIMIT 1`,
+      [date]
+    );
+    if (r.rowCount && r.rows[0].y != null) {
+      return {
+        yield: Number(r.rows[0].y),
+        actualDate: r.rows[0].date.toISOString().slice(0, 10),
+      };
+    }
+  } catch (_) { /* table missing or empty */ }
+  return null;
+}
+
+app.get('/api/yield-curve', async (req, res) => {
+  const dates = String(req.query.dates || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  if (!dates.length) return res.status(400).json({ error: 'dates required (comma-separated YYYY-MM-DD)' });
+  try {
+    const curves = [];
+    for (const date of dates) {
+      const points = [];
+      for (const m of YC_MATURITIES) {
+        // 1. IBKR-backed rates table (yield col)
+        let hit = await lookupYieldOnOrBefore(m.rates, 'rates', 'yield', date);
+        let source = 'ibkr';
+        // 2. FRED fallback
+        if (!hit) {
+          hit = await lookupYieldOnOrBefore(m.fred, 'macro', 'value', date);
+          source = 'fred';
+        }
+        if (hit) {
+          points.push({
+            symbol: m.sym, label: m.label, years: m.years,
+            yield: hit.yield, actualDate: hit.actualDate, source,
+          });
+        }
+      }
+      curves.push({ date, points });
+    }
+    res.json({ curves });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
 app.get('/api/macro/series', async (_req, res) => {
   try {
     const r = await pool.query(
@@ -223,6 +290,51 @@ app.get('/api/sentiment/ticker/:ticker', async (req, res) => {
   try {
     const posts = await getPostsForTicker(pool, t, hours, 30);
     res.json({ ticker: t, window: win, posts });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+// ---------- Cron / task monitoring ----------
+const LOG_DIR = process.env.MACRO_LOG_DIR || '/tmp/macrodash';
+const LOG_FILES = {
+  news: 'news.log', sentiment: 'sentiment.log', calendar: 'calendar.log',
+  ibkr: 'ibkr.log', fred: 'fred.log', gateway: 'gateway-keepalive.log',
+};
+
+function tailFile(filePath, lines = 20) {
+  try {
+    if (!fs.existsSync(filePath)) return { exists: false, mtime: null, tail: [] };
+    const stat = fs.statSync(filePath);
+    const buf = fs.readFileSync(filePath, 'utf-8');
+    const all = buf.split('\n').filter(Boolean);
+    return { exists: true, mtime: stat.mtime, tail: all.slice(-lines) };
+  } catch (e) {
+    return { exists: false, mtime: null, tail: [`[read error] ${e.message}`] };
+  }
+}
+
+app.get('/api/cron/status', async (_req, res) => {
+  try {
+    const tasks = await getCronStatus(pool);
+    // Attach log info
+    for (const t of tasks) {
+      const logName = LOG_FILES[t.name];
+      if (logName) {
+        const logInfo = tailFile(path.join(LOG_DIR, logName), 10);
+        t.logExists = logInfo.exists;
+        t.logMtime = logInfo.mtime;
+        t.logTail = logInfo.tail;
+      }
+    }
+    // Add gateway-keepalive task (no DB metric — uses log only)
+    const gw = tailFile(path.join(LOG_DIR, LOG_FILES.gateway), 10);
+    tasks.push({
+      name: 'gateway', schedule: '* * * * *', expectedSec: 60,
+      lastAt: gw.mtime, recent: null, total: null,
+      logExists: gw.exists, logMtime: gw.mtime, logTail: gw.tail,
+    });
+    res.json({ tasks, logDir: LOG_DIR, generatedAt: Date.now() });
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }

@@ -162,3 +162,21 @@ export interface CalendarPayload {
   events: CalendarEvent[];
   updatedAt: number;
 }
+
+export interface CronTaskStatus {
+  name: string;
+  schedule: string;
+  expectedSec: number;
+  lastAt: string | null;
+  recent: number | null;
+  total: number | null;
+  logExists?: boolean;
+  logMtime?: string | null;
+  logTail?: string[];
+}
+
+export interface CronStatusPayload {
+  tasks: CronTaskStatus[];
+  logDir: string;
+  generatedAt: number;
+}

@@ -2,6 +2,7 @@ import type {
   FuturesPayload,
   FuturesRoot,
   CalendarPayload,
+  CronStatusPayload,
   HistoryPayload,
   HistoryRange,
   MacroIndexPayload,
@@ -113,6 +114,11 @@ export async function fetchHistory(symbol: string, range: HistoryRange): Promise
   const data = await getJSON<HistoryPayload>(`/api/history/${encodeURIComponent(symbol)}?range=${range}`);
   historyCache.set(key, { data, ts: Date.now() });
   return data;
+}
+
+// ---------- Cron monitoring ----------
+export async function fetchCronStatus(): Promise<CronStatusPayload> {
+  return getJSON<CronStatusPayload>('/api/cron/status');
 }
 
 // ---------- Economic calendar ----------

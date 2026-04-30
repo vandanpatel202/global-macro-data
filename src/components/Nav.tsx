@@ -10,6 +10,7 @@ const ITEMS = [
   { to: '/macro', label: 'Macro' },
   { to: '/calendar', label: 'Calendar' },
   { to: '/sentiment', label: 'Sentiment' },
+  { to: '/health', label: 'Health' },
 ];
 
 interface Props {

@@ -12,6 +12,7 @@ import Crypto from './pages/Crypto';
 import Sentiment from './pages/Sentiment';
 import Macro from './pages/Macro';
 import Calendar from './pages/Calendar';
+import Health from './pages/Health';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root missing');
@@ -30,6 +31,7 @@ createRoot(container).render(
           <Route path="sentiment" element={<Sentiment />} />
           <Route path="macro" element={<Macro />} />
           <Route path="calendar" element={<Calendar />} />
+          <Route path="health" element={<Health />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
